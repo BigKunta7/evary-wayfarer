@@ -1,8 +1,11 @@
-
 import { useState, useEffect } from 'react';
 import { Clock, Check } from 'lucide-react';
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Membership = () => {
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [countdown, setCountdown] = useState({
     days: 0,
     hours: 0,
@@ -17,7 +20,6 @@ const Membership = () => {
     membershipType: ''
   });
 
-  // Set countdown to December 31, 2024
   useEffect(() => {
     const targetDate = new Date('2024-12-31T23:59:59').getTime();
 
@@ -76,17 +78,56 @@ const Membership = () => {
     }
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log('Form submitted:', formData);
-    // Add toast notification
-    alert('Merci pour votre inscription ! Nous vous contacterons bientôt.');
+    setIsSubmitting(true);
+
+    try {
+      const { error } = await supabase
+        .from('memberships')
+        .insert([
+          {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            membership_type: formData.membershipType
+          }
+        ]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Inscription réussie !",
+        description: "Nous vous contacterons bientôt pour finaliser votre adhésion.",
+      });
+
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        membershipType: ''
+      });
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        variant: "destructive",
+        title: "Erreur lors de l'inscription",
+        description: "Un problème est survenu. Veuillez réessayer plus tard.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const validateForm = () => {
+    return formData.name.length > 0 && 
+           formData.email.includes('@') && 
+           formData.phone.length >= 10 &&
+           formData.membershipType.length > 0;
   };
 
   return (
     <div className="min-h-screen bg-evary-beige">
-      {/* Hero Section with Countdown */}
       <section className="relative py-24 bg-evary-brown text-white">
         <div className="container">
           <h1 className="hero-text text-center mb-12">Rejoignez EVARY</h1>
@@ -116,7 +157,6 @@ const Membership = () => {
         </div>
       </section>
 
-      {/* Membership Types */}
       <section className="py-24">
         <div className="container">
           <h2 className="section-heading text-center mb-16">Nos Statuts de Membre</h2>
@@ -149,7 +189,6 @@ const Membership = () => {
         </div>
       </section>
 
-      {/* Registration Form */}
       <section className="py-24 bg-white">
         <div className="container max-w-2xl">
           <h2 className="section-heading text-center mb-12">Pré-inscription Membre</h2>
@@ -209,10 +248,17 @@ const Membership = () => {
 
             <button
               type="submit"
-              className="w-full mt-8 py-3 bg-evary-sage text-white rounded-full hover:bg-opacity-90 transition-all"
+              disabled={isSubmitting || !validateForm()}
+              className="w-full mt-8 py-3 bg-evary-sage text-white rounded-full hover:bg-opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Pré-inscription
+              {isSubmitting ? 'Envoi en cours...' : 'Pré-inscription'}
             </button>
+
+            {!validateForm() && (
+              <p className="mt-2 text-sm text-red-500 text-center">
+                Veuillez remplir tous les champs correctement
+              </p>
+            )}
           </form>
         </div>
       </section>
