@@ -1,6 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { Globe, Users, Heart, MapPin } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Index = () => {
   const [isVisible, setIsVisible] = useState<{[key: string]: boolean}>({});
@@ -182,9 +182,20 @@ const Index = () => {
           <p className="text-xl mb-8 text-evary-beige max-w-2xl mx-auto">
             Rejoignez notre communauté et commencez à créer des souvenirs inoubliables
           </p>
-          <button className="bg-evary-sage text-white px-8 py-3 rounded-full text-lg font-medium hover:bg-opacity-90 transition-all duration-300">
-            Commencer l'Aventure
-          </button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              to="/membership"
+              className="bg-evary-sage text-white px-8 py-3 rounded-full text-lg font-medium hover:bg-opacity-90 transition-all duration-300"
+            >
+              Devenir Membre
+            </Link>
+            <Link
+              to="/early-access"
+              className="bg-white text-evary-brown px-8 py-3 rounded-full text-lg font-medium hover:bg-opacity-90 transition-all duration-300"
+            >
+              1 Mois Offert
+            </Link>
+          </div>
         </div>
       </section>
     </div>
