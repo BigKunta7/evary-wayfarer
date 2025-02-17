@@ -1,8 +1,11 @@
-
 import { useState } from 'react';
 import { Gift, Star } from 'lucide-react';
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const EarlyAccess = () => {
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -57,17 +60,49 @@ const EarlyAccess = () => {
     "International - Saint-Barth"
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log('Form submitted:', formData);
-    // Add toast notification
-    alert('Merci pour votre inscription ! Votre mois gratuit sera activé dès le lancement.');
+    setIsSubmitting(true);
+
+    try {
+      const { error } = await supabase
+        .from('early_access')
+        .insert([
+          {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            interests: formData.interests
+          }
+        ]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Inscription réussie !",
+        description: "Votre mois gratuit sera activé dès le lancement.",
+      });
+
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        interests: []
+      });
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        variant: "destructive",
+        title: "Erreur lors de l'inscription",
+        description: "Un problème est survenu. Veuillez réessayer plus tard.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-evary-beige">
-      {/* Hero Section */}
       <section className="relative py-24 bg-evary-brown text-white">
         <div className="container text-center">
           <h1 className="hero-text mb-6">Un Mois Offert</h1>
@@ -86,7 +121,6 @@ const EarlyAccess = () => {
         </div>
       </section>
 
-      {/* Subscription Types */}
       <section className="py-24">
         <div className="container">
           <h2 className="section-heading text-center mb-16">Nos Formules d'Abonnement</h2>
@@ -116,7 +150,6 @@ const EarlyAccess = () => {
         </div>
       </section>
 
-      {/* Early Access Form */}
       <section className="py-24 bg-white">
         <div className="container max-w-2xl">
           <h2 className="section-heading text-center mb-12">Pré-inscription Client</h2>
@@ -188,9 +221,10 @@ const EarlyAccess = () => {
 
             <button
               type="submit"
-              className="w-full mt-8 py-3 bg-evary-sage text-white rounded-full hover:bg-opacity-90 transition-all"
+              disabled={isSubmitting}
+              className="w-full mt-8 py-3 bg-evary-sage text-white rounded-full hover:bg-opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              S'inscrire pour le mois gratuit
+              {isSubmitting ? 'Envoi en cours...' : "S'inscrire pour le mois gratuit"}
             </button>
 
             <p className="mt-4 text-sm text-center text-evary-stone">
